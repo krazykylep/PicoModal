@@ -103,6 +103,18 @@ window.picoModal = (function(window, document) {
                 return iface;
             },
 
+            // hides the element instead of deleting it.
+            hide: function() {
+                elem.style.display = "none";
+                return iface;
+            },
+
+            // shows the element.
+            show: function() {
+                elem.style.display = "block";
+                return iface;
+            },
+
             // Removes this element from the DOM
             destroy: function() {
                 document.body.removeChild(elem);
@@ -120,11 +132,13 @@ window.picoModal = (function(window, document) {
         // The registered on click events
         var clickCallbacks = observable();
 
+        var autoOpen = getOption('autoOpen', true);
+
         // The overlay element
         var elem = make()
             .clazz("pico-overlay")
             .stylize({
-                display: "block",
+                display: autoOpen ? "block" : "none",
                 position: "fixed",
                 top: "0px",
                 left: "0px",
@@ -141,6 +155,8 @@ window.picoModal = (function(window, document) {
         return {
             elem: elem.elem,
             destroy: elem.destroy,
+            hide: elem.hide,
+            show: elem.show,
             onClick: clickCallbacks.watch
         };
     };
@@ -159,21 +175,37 @@ window.picoModal = (function(window, document) {
         }
 
         var shadow = overlay( getOption );
-
         var closeCallbacks = observable();
+        var defaultAutoDestroy = true;
+        var contentElem = null;
+        if (options.content instanceof HTMLElement) {
+            contentElem = options.content;
+            defaultAutoDestroy = false;
+        }
+        var autoOpen = getOption('autoOpen', true);
 
         var elem = make()
             .clazz("pico-content")
             .stylize({
-                display: 'block',
+                display: "block",
+                visibility: autoOpen ? "visible" : "hidden",
                 position: 'fixed',
                 zIndex: 10001,
                 left: "50%",
                 top: "50px"
-            })
-            .html(options.content);
+            });
+
+        if (contentElem) {
+            elem.elem.appendChild(contentElem);
+        } else {
+            elem.html(options.content);
+        }
 
         var width = getOption('width', elem.getWidth());
+        if (!autoOpen) {
+            elem.stylize({display: "none"});
+        }
+        elem.stylize({visibility: "visible"});
 
         elem
             .stylize({
@@ -186,14 +218,27 @@ window.picoModal = (function(window, document) {
                 borderRadius: "5px"
             }) );
 
-        var close = function () {
+        var destroy = function () {
             closeCallbacks.trigger();
             shadow.destroy();
             elem.destroy();
         };
 
+        var close = function () {
+            closeCallbacks.trigger();
+            shadow.hide();
+            elem.hide();
+        };
+
+        var open = function () {
+            shadow.show();
+            elem.show();
+        };
+
+        var closeFunc = getOption('autoDestroy', defaultAutoDestroy) ? destroy : close;
+
         if ( getOption('overlayClose', true) ) {
-            shadow.onClick(close);
+            shadow.onClick(closeFunc);
         }
 
         var closeButton;
@@ -214,7 +259,7 @@ window.picoModal = (function(window, document) {
                     lineHeight: "15px",
                     background: "#CCC"
                 }) )
-                .onClick(close);
+                .onClick(closeFunc);
         }
 
         return {
@@ -222,6 +267,8 @@ window.picoModal = (function(window, document) {
             closeElem: closeButton ? closeButton.elem : null,
             overlayElem: shadow.elem,
             close: close,
+            open: open,
+            destroy: destroy,
             onClose: closeCallbacks.watch
         };
     };
