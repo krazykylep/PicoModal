@@ -88,6 +88,10 @@ window.picoModal = (function(window, document) {
 
             // Returns the width of this element
             getWidth: function () {
+                var style = getComputedStyle(elem.childNodes[0]);
+                if (style && style.display === "none") {
+                    elem.childNodes[0].style.display = "block";
+                }
                 return elem.clientWidth;
             },
 
@@ -164,7 +168,7 @@ window.picoModal = (function(window, document) {
     // A function for easily displaying a modal with the given content
     return function(options) {
 
-        if ( typeof options === "string" ) {
+        if ( typeof options === "string" || options instanceof HTMLElement) {
             options = { content: options };
         }
 
@@ -188,7 +192,7 @@ window.picoModal = (function(window, document) {
             .clazz("pico-content")
             .stylize({
                 display: "block",
-                visibility: autoOpen ? "visible" : "hidden",
+                visibility: "hidden",
                 position: 'fixed',
                 zIndex: 10001,
                 left: "50%",
@@ -200,23 +204,19 @@ window.picoModal = (function(window, document) {
         } else {
             elem.html(options.content);
         }
-
         var width = getOption('width', elem.getWidth());
-        if (!autoOpen) {
-            elem.stylize({display: "none"});
-        }
+        elem.stylize({display: "none"});
         elem.stylize({visibility: "visible"});
 
-        elem
-            .stylize({
-                width: width + "px",
-                margin: "0 0 0 " + (-(width / 2) + "px")
-            })
-            .stylize( getOption('modalStyles', {
-                backgroundColor: "white",
-                padding: "20px",
-                borderRadius: "5px"
-            }) );
+        elem.stylize({
+            width: width + "px",
+            margin: "0 0 0 " + (-(width / 2 + 20) + "px")
+        })
+        .stylize( getOption('modalStyles', {
+            backgroundColor: "white",
+            padding: "20px",
+            borderRadius: "5px"
+        }));
 
         var destroy = function () {
             closeCallbacks.trigger();
@@ -233,7 +233,17 @@ window.picoModal = (function(window, document) {
         var open = function () {
             shadow.show();
             elem.show();
+            if (contentElem) {
+                var style = getComputedStyle(contentElem);
+                if (style && style.display === "none") {
+                    contentElem.style.display = "block";
+                }
+            }
         };
+
+        if (autoOpen) {
+            open();
+        }
 
         var closeFunc = getOption('autoDestroy', defaultAutoDestroy) ? destroy : close;
 

@@ -66,6 +66,20 @@ this: ([Run this code](http://jsfiddle.net/8pPTD/))
   };
 ```
 
+More options!
+
+```javascript
+  var modal = picoModal({
+      content: htmlElement,
+      autoOpen: false,
+      autoDestroy: false,
+      width: 500,
+      closeButton: false
+  });
+  modal.open();
+  modal.close();
+```
+
 You can also attach an event to fire when the modal is closed:
 ([Run this code](http://jsfiddle.net/TM95X/))
 
@@ -140,7 +154,9 @@ The following properties are available on the object returned by picoModal:
 * __modalElem__: A reference to the modal DOM element
 * __closeElem__: A reference to the close DOM element
 * __overlayElem__: A reference to the overlay DOM element
+* __open__: A function to open the modal
 * __close__: A function to close the modal
+* __destroy__: A function to remove the modal and inside content
 * __onClose__: A function that registers a callback to invoke when the
   modal is closed
 
